@@ -24,5 +24,5 @@ The dataset describes each listing's location (borough, neighbourhood, coordinat
 | Session | Contents | Link |
 |---|---|---|
 | Session 0 | Initial data exploration | [Notebook](notebooks/CDS303_Final_Project0_Airbnb.ipynb) |
-| Session 1 | Paper summary, variable selection, supplementary dataset | [Session 1](session1.md) |
+| Session 1 | Paper summary, variable selection, supplementary dataset | [Session 1](Session1.md) |
 | Session 2 | *(coming
