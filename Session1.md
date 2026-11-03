@@ -37,6 +37,18 @@ Once cluster labels exist, the unsupervised problem can be turned into a supervi
 
 > **Characterization vs. validation.** In both papers, the classifier's predictors are the same original variables that were summarized into the clustering components. High accuracy therefore shows that the classifier can *reproduce and describe* the clustering result, not that the clusters are independently "true". In our project, the classifier will mainly use variables that were **not** clustering inputs (location, size, host, and review variables; see Section 2). This means it will also show how the price-room-availability profiles relate to other listing characteristics. The cluster labels are used **only** as the target and never as input features.
 
+### 1.4 Implications for Our Airbnb Project
+We follow the same four steps, using the tools covered in the course demos. The papers' more specialized tools are noted for comparison.
+
+| Framework step | Papers | Our plan (course tools) |
+|---|---|---|
+| Preprocessing | Model-based + KNN hot-deck imputation; Isolation Forest | Price text → number; drop rows without price; remove top 1% of prices; log transforms; `StandardScaler` (Demo 1: effect of normalization on distance) |
+| Dimensionality reduction | Sparse PCA (numerical) + MCA (categorical) | `PCA` with explained-variance plot, loadings, and biplot (Demo 6). With only five clustering inputs, PCA mainly supports visualization and component interpretation |
+| Clustering | Compare k-means, agglomerative, GMM; elbow method | `KMeans` and `AgglomerativeClustering` (Ward) with dendrogram; choose *k* using silhouette score and the elbow (`KElbowVisualizer`); profile clusters with `groupby('cluster').mean()` (Demo 7) |
+| Classification | XGBoost + SHAP | `DecisionTreeClassifier` with `plot_tree` for readable rules (Demo 2); `RandomForestClassifier` with impurity and permutation importance (Demo 3); SHAP bar and beeswarm plots per cluster (Demo 4) |
+
+---
+
 ## 2. Variable Selection
 
 | Variable | Description and unit | Data type | Proposed role | Rationale / preparation needed |
