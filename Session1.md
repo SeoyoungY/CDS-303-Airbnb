@@ -28,7 +28,14 @@
 
 
 ### 1.3 How Classification Characterizes Clusters
-(작성 예정)
+Once cluster labels exist, the unsupervised problem can be turned into a supervised one: *"Given an observation's original characteristics, which cluster does it belong to?"*
+1. **Translating back to original variables.** The classifier is trained on the original, interpretable variables rather than on the abstract components, so the explanation is expressed in real units.
+2. **Global explanation.** The average absolute SHAP value of each feature ranks the variables that best separate all clusters (e.g., in the PISA study, socio-economic status had by far the highest importance).
+3. **Local, per-cluster explanation.** SHAP beeswarm plots for each cluster show which variables push an observation toward that cluster and in which direction (high vs. low values). This is how the authors labeled each cluster.
+4. **Revealing what cluster means miss.** Comparing cluster means shows how clusters differ on average, but not which differences actually *separate* them. In the method article, some variables with large mean differences contributed little to classification, whereas a variable weakly related to the clustering components turned out to be a strong predictor for one cluster.
+5. **Credibility and reuse.** High classification accuracy shows that the clusters are separable and consistently defined, and the trained model can assign new observations to existing profiles.
+
+> **Characterization vs. validation.** In both papers, the classifier's predictors are the same original variables that were summarized into the clustering components. High accuracy therefore shows that the classifier can *reproduce and describe* the clustering result, not that the clusters are independently "true". In our project, the classifier will mainly use variables that were **not** clustering inputs (location, size, host, and review variables; see Section 2). This means it will also show how the price-room-availability profiles relate to other listing characteristics. The cluster labels are used **only** as the target and never as input features.
 
 ## 2. Variable Selection
 
