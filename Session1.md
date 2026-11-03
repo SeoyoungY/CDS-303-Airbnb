@@ -21,7 +21,11 @@
 **How the application article used it.** The same authors applied the framework to 30,800 Spanish students in PISA 2022 with 74 background variables. They obtained 16 derived variables, **7 student clusters** (weighted k-means), and an XGBoost classifier with **0.864 test accuracy**. SHAP values showed that socio-economic status and home ICT access/use were the strongest differentiators, and the authors used the top predictors of each cluster to give the clusters names (e.g., "Students with limited access to ICT", "Emotionally vulnerable students"). Finally, they compared the clusters on variables that were **not** used to form them (gender, PISA test scores, educational expectations) to derive policy insights.
 
 ### 1.2 Why Clustering Results Need Interpretation
-(작성 예정)
+- **A label is not an insight.** A clustering algorithm only says that observation A belongs to "Cluster 3". The method article stresses that the last and most important step is to understand the clusters and give them meaningful names, which requires putting the result into the context of the study.
+- **The inputs to clustering are abstract.** After dimensionality reduction, clusters are formed in a space of derived components (e.g., 16 components instead of 74 variables in the PISA study). These components have no natural units, so a cluster's position in that space cannot be explained directly to decision-makers.
+- **Clusters are used for decisions.** In the application article, the purpose was to design targeted education policies. A profile can only guide action if we know who is in it and what sets it apart. The same is true for our Airbnb profiles.
+- **Interpretation checks plausibility.** Describing clusters with domain knowledge helps reveal whether a cluster reflects a real pattern or an artifact of preprocessing or algorithm choice.
+
 
 ### 1.3 How Classification Characterizes Clusters
 (작성 예정)
