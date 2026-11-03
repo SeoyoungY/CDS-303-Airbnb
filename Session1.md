@@ -51,24 +51,106 @@ We follow the same four steps, using the tools covered in the course demos. The 
 
 ## 2. Variable Selection
 
+**Data snapshot (NYC, 29,918 listings).**
+| Item | Value |
+|---|---|
+| Boroughs | Manhattan 13,681 · Brooklyn 10,290 · Queens 4,637 · Bronx 989 · Staten Island 321 |
+| Room types | Entire home/apt 16,410 · Private room 12,853 · Hotel room 463 · Shared room 192 |
+| Price (n = 19,406) | Median $182 · IQR $104–$337 · 99th percentile $2,000 · Max $31,538 |
+| Minimum nights ≥ 30 | 80.7% of all listings (73.7% of listings with a price) |
+| Neighbourhoods / property types | 223 / 68 categories |
+
+**Design logic.** Our research question defines the clustering space: **price, room type, and availability**. All other informative variables are reserved for the classification stage, where they explain the clusters.
+
+### 2.1 Clustering Inputs
 | Variable | Description and unit | Data type | Proposed role | Rationale / preparation needed |
 |---|---|---|---|---|
-| price | Nightly price (USD) | Numerical | Clustering input | Convert "$65.73" string to float; log-transform |
-| (추가 예정) | | | | |
+| `price` | Nightly price (USD) | Numerical | Clustering input | Core variable of the RQ. Stored as text (`"$150.00"`) → strip `$` and `,`, convert to float. Missing for 10,512 listings (35.1%), and **not at random**: 99.9% of listings with zero availability in the next year have no price, versus 15.3% of the others. We drop these rows and define our scope as *actively offered listings*. Highly right-skewed (median $182, max $31,538) → remove prices above the 99th percentile ($2,000) and log-transform; 19,212 listings remain. |
+| `room_type` | Entire home/apt, Private room, Shared room, Hotel room | Categorical | Clustering input | Core variable of the RQ. One-hot encode. Among priced listings: entire home 10,008, private room 8,658, hotel room 393, shared room 153. The two rare types may be merged or analyzed separately. |
+| `availability_30` | Days available in the next 30 days (0–30) | Numerical | Clustering input | Short-term availability; captures how actively a listing is open for booking. Kept as the representative of the 30/60/90-day and end-of-year windows (Spearman 0.89–0.94). Standardize. |
+| `availability_365` | Days available in the next 365 days (0–365) | Numerical | Clustering input | Long-term availability; separates full-time rentals from occasional ones. Only moderately related to `availability_30` (Spearman 0.65), so it adds distinct information. Standardize. |
+| `minimum_nights` | Minimum stay required (nights) | Numerical | Clustering input | Availability *policy*. Among priced listings the median is exactly 30 nights and 73.7% require 30+ nights (consistent with NYC short-term rental rules), while the lowest quarter require 4 nights or fewer. The distribution is therefore split rather than continuous → encode as a **monthly-stay flag (≥ 30 nights)**, or cap at 60 and log-transform. 8 missing → drop. |
 
-### Discussion
-- **Clustering variables and the research question:** (작성 예정)
-- **Candidate predictors for classification:** (작성 예정)
-- **Excluded variables:** IDs, URLs, and 15 columns that are 100% missing
-- **Preparation needs:** missing values, scaling, categorical encoding
+### 2.2 Classification Inputs (Candidate Predictors)
+| Variable | Description and unit | Data type | Proposed role | Rationale / preparation needed |
+|---|---|---|---|---|
+| `neighbourhood_group_cleansed` | Borough (5 levels) | Categorical | Classification input | Location is a likely driver of price/availability profiles. One-hot encode. |
+| `latitude`, `longitude` | Coordinates (degrees) | Numerical | Classification input | Fine-grained location; also used to join the supplementary dataset. |
+| `property_type` | e.g., Entire rental unit, Private room in home | Categorical | Classification input | 68 levels → group rare types into "Other", then one-hot encode. |
+| `accommodates` | Maximum number of guests | Numerical | Classification input | Listing size; explains price differences. |
+| `bedrooms` | Number of bedrooms | Numerical | Classification input | Listing size. 39 missing → median impute. |
+| `beds` | Number of beds | Numerical | Classification input | Listing size. 1,154 missing → median impute. |
+| `bathrooms_text` | e.g., "1.5 shared baths" | Categorical (text) | Classification input | `bathrooms` is 100% empty, so extract number of baths and a *shared* flag from this text. |
+| `amenities` | List of amenities | Text (list) | Classification input | Convert to `amenities_count`, optionally flags for key amenities (e.g., kitchen, washer). |
+| `number_of_reviews` | Total reviews (count) | Numerical | Classification input | Popularity/track record. Log transform. |
+| `reviews_per_month` | Average reviews per month | Numerical | Classification input | Booking activity. Missing (8,114) means no reviews → fill with 0. |
+| `review_scores_rating` | Overall rating (0–5) | Numerical | Classification input | Guest satisfaction. Missing when no reviews → add `has_reviews` flag and impute. |
+| `review_scores_location` | Location rating (0–5) | Numerical | Classification input | Perceived location quality. Same missing treatment. |
+| `review_scores_value` | Value rating (0–5) | Numerical | Classification input | Perceived value for money; relevant to price profiles. |
+| `host_is_superhost` | Superhost status (t/f) | Categorical (binary) | Classification input | Host quality. Encode as 0/1. |
+| `calculated_host_listings_count` | Listings the host has in NYC | Numerical | Classification input | Separates individual hosts from commercial operators (max 889). Representative of host-count variables (Spearman 0.96 with `host_listings_count`). Log transform. |
+| `hosts_time_as_host_years` | Years as host | Numerical | Classification input | Host experience. 2 missing → impute. |
+| `license` | Registration number or "Exempt" | Text | Classification input | Recode as `license_status` with three levels: registered (`OSE-STRREG-…`, 2,231), exempt (2,877), none (24,810). Directly relevant to NYC short-term rental regulation. |
 
-> Note: Cluster labels will be the classification target and will not be used as input features.
+### 2.3 Contextual Variables (Interpretation Only)
+| Variable | Description and unit | Data type | Proposed role | Rationale / preparation needed |
+|---|---|---|---|---|
+| `neighbourhood_cleansed` | Neighbourhood name (223 levels) | Categorical | Contextual variable | Too many levels for modeling; used for maps and cluster descriptions. |
+| `estimated_occupancy_l365d` | Estimated nights booked in last 12 months | Numerical | Contextual variable | Describes cluster performance; not used as a predictor to keep the explanation focused on listing traits. |
+| `estimated_revenue_l365d` | Estimated revenue in last 12 months (USD) | Numerical | Contextual variable | Derived from price × occupancy → would leak price information; used only to describe clusters. |
+| `last_review` | Date of most recent review | Date | Contextual variable | Convert to "days since last review" to identify inactive listings. |
 
-## 3. Supplementary Dataset
-- **Title / Provider / Link:** (작성 예정)
-- **Relevant variables:** (작성 예정)
-- **Contribution to the research question:** (작성 예정)
-- **Connection to current data:** (작성 예정)
+### 2.4 Excluded Variables
+| Variable(s) | Description | Data type | Proposed role | Rationale |
+|---|---|---|---|---|
+| `id`, `listing_url`, `host_id`, `host_url`, `host_profile_id`, `host_profile_url`, `picture_url`, `host_picture_url`, `scrape_id` | Identifiers and URLs | Identifier | Exclude | No analytical meaning. |
+| `name`, `description`, `host_name`, `host_about`, `host_location` | Free text | Text | Exclude | Out of scope (would need NLP); `host_name` is personal data. |
+| `neighborhood_overview`, `host_since`, `host_response_time`, `host_response_rate`, `host_acceptance_rate`, `host_thumbnail_url`, `host_neighbourhood`, `host_total_listings_count`, `host_verifications`, `neighbourhood`, `bathrooms`, `calendar_updated`, `instant_bookable` | Various | — | Exclude | **100% missing** in this snapshot (13 columns). |
+| `availability_60`, `availability_90`, `availability_eoy` | Availability over other windows | Numerical | Exclude | Redundant with `availability_30` (Spearman 0.89–0.94). |
+| `maximum_nights`, `minimum_minimum_nights`, `maximum_minimum_nights`, `minimum_maximum_nights`, `maximum_maximum_nights`, `minimum_nights_avg_ntm`, `maximum_nights_avg_ntm` | Variants of stay rules | Numerical | Exclude | Minimum-night variants are redundant with `minimum_nights` (Spearman 0.97–1.00); maximum nights is mostly a default value (1,125 nights for 11,661 listings). |
+| `price_quote_checkin_date`, `price_quote_checkout_date`, `price_quote_total_price`, `price_quote_price_per_night`, `price_quote_raw` | Price quote details | Mixed | Exclude | Redundant with `price` (`price_quote_price_per_night` correlates 1.00 with price). |
+| `review_scores_accuracy`, `_cleanliness`, `_checkin`, `_communication` | Review sub-scores | Numerical | Exclude | Correlated with `review_scores_rating` (Spearman 0.61–0.74). `review_scores_location` (0.48) and `review_scores_value` are kept because they carry distinct meaning. |
+| `number_of_reviews_ltm`, `number_of_reviews_l30d`, `number_of_reviews_ly`, `first_review` | Review counts by period | Mixed | Exclude | Redundant with `number_of_reviews` and `reviews_per_month`. |
+| `host_listings_count`, `calculated_host_listings_count_entire_homes`, `_private_rooms`, `_shared_rooms` | Host listing counts | Numerical | Exclude | Redundant with `calculated_host_listings_count`. |
+| `hosts_time_as_user_years`, `hosts_time_as_user_months`, `hosts_time_as_host_months` | Account age | Numerical | Exclude | Redundant with `hosts_time_as_host_years`. |
+| `host_has_profile_pic`, `has_availability`, `host_identity_verified` | Binary flags | Categorical | Exclude | Near-constant (96.5%, 96.4%, and 98.7% in one category); little information. |
+| `source`, `last_scraped`, `calendar_last_scraped` | Scraping metadata | Mixed | Exclude | Describe data collection, not listings. |
+
+### 2.5 Discussion
+- **Clustering variables and the research question.** The five clustering inputs map directly onto the three dimensions in our research question: *price* (`price`), *room type* (`room_type`), and *availability* (`availability_30`, `availability_365`, `minimum_nights`). Clustering in this space should reveal listing profiles such as budget private rooms, full-time entire-home rentals, or monthly-stay units.
+- **Candidate predictors for explaining clusters.** Location (borough, coordinates), size (accommodates, bedrooms, beds, baths), amenities, review activity and scores, host characteristics (superhost, number of listings, experience), and license status (registered / exempt / none). Because these are mostly **different** from the clustering inputs, the classifier shows which listing characteristics are associated with each profile.
+- **Excluded variables.** Identifiers and URLs, free text, 13 completely empty columns, and redundant variants of availability, stay rules, price quotes, review scores, and host counts.
+- **Preparation needs.**
+  - *Missing values:* drop rows with missing `price` (35%; mostly listings with no availability, so results describe actively offered listings); fill `reviews_per_month` with 0; add a `has_reviews` flag and impute review scores; median-impute bedrooms/beds.
+  - *Type conversion:* `price` text → float; `bathrooms_text` → number + shared flag; `amenities` → count; `license` → three-level status; `minimum_nights` → monthly-stay flag.
+  - *Scaling and skew:* log-transform `price` (after removing the top 1%), review counts, and host listing counts (skewness 4–20); standardize all numeric clustering inputs.
+  - *Categorical encoding:* one-hot encode `room_type`, borough, and grouped `property_type`; binary-encode t/f flags.
+- **Leakage rule.** Cluster labels are the classification target only. Variables derived from price (e.g., `estimated_revenue_l365d`) are kept out of the classifier.
+
+---
+
+## 3. Supplementary Datasets
+
+### 3.1 MTA Subway Stations and Complexes
+- **Provider:** Metropolitan Transportation Authority (MTA), via NY State Open Data
+- **Link:** [catalog.data.gov – MTA Subway Stations and Complexes](https://catalog.data.gov/dataset/mta-subway-stations-and-complexes)
+- **Relevant variables:** station name, borough, latitude, longitude, lines served
+- **Contribution:** Transit access is a plausible explanation for price and availability differences. We can compute each listing's **distance to the nearest subway station** and the **number of stations within 500 m**, then use these as additional classification predictors or to describe clusters.
+- **Connection to our data:** Spatial join using `latitude` and `longitude`.
+
+### 3.2 NYPD Complaint Data (Current Year to Date)
+- **Provider:** New York City Police Department, via NYC Open Data
+- **Link:** [catalog.data.gov – NYPD Complaint Data Current (Year To Date)](https://catalog.data.gov/dataset/nypd-complaint-data-current-year-to-date)
+- **Relevant variables:** offense category, borough, precinct, latitude, longitude, date
+- **Contribution:** Neighbourhood safety may relate to price levels and guest location ratings. Aggregated complaint counts near each listing can help interpret clusters.
+- **Connection to our data:** Count complaints within a radius of each listing (coordinates), or aggregate by borough (`neighbourhood_group_cleansed`). Restricting to the same 2026 period aligns it with our September 2026 snapshot.
+
+*Data integration is not performed in this session.*
+
+---
 
 ## Supporting Code
-- (노트북 링크 예정)
+- [Session 0 – Initial data exploration (notebook)](notebooks/CDS303_Final_Project0_Airbnb.ipynb)
+- [Session 1 – Variable screening (notebook)](notebooks/CDS303_Session1_Variable_Screening.ipynb): missing values, price missingness, distributions, redundancy correlations, and encoding previews that support the table above.
+
+*Data file:* `listings.csv.gz` for New York City (14 September 2026) from [Inside Airbnb](https://insideairbnb.com/get-the-data/). The file (~78 MB) is not stored in this repository.
