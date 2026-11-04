@@ -4,7 +4,6 @@
 
 **Team Members:** Seohyun Hong, Seoyoung Yun, Sieun Woo
 
----
 
 ## 1. Project Overview
 
