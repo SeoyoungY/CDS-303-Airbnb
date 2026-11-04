@@ -271,17 +271,17 @@ We have not merged the datasets yet.
 
 Alvarez-Garcia, M., Ibar-Alonso, R., & Arenas-Parra, M. (2024). A comprehensive framework for explainable cluster analysis. *Information Sciences, 663*, 120282.
 
-(https://doi.org/10.1016/j.ins.2024.120282)
+<https://doi.org/10.1016/j.ins.2024.120282>
 
 Alvarez-Garcia, M., Arenas-Parra, M., & Ibar-Alonso, R. (2024). Uncovering student profiles: An explainable cluster analysis approach to PISA 2022. *Computers & Education, 223*, 105166.
 
-(https://doi.org/10.1016/j.compedu.2024.105166)
+<https://doi.org/10.1016/j.compedu.2024.105166>
 
 **Dataset Source**
 
 Inside Airbnb. (2026). New York City Listings and Calendar Data.
 
-(https://insideairbnb.com/get-the-data/)
+<https://insideairbnb.com/get-the-data/>
 
 **Course Materials**
 
