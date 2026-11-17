@@ -1,0 +1,4 @@
+ident,iata_code,name,latitude_deg,longitude_deg,iso_region,municipality
+KEWR,EWR,Newark Liberty International Airport,40.6894,-74.170545,US-NJ,Newark
+KJFK,JFK,John F. Kennedy International Airport,40.639447,-73.779317,US-NY,New York
+KLGA,LGA,LaGuardia Airport,40.777199,-73.872597,US-NY,New York
