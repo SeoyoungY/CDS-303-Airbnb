@@ -20,8 +20,6 @@
 | NYPD Complaint Data (Year To Date) | NYC Open Data | one reported incident | 372,940 incidents (Jan–Aug 2026) |
 | 311 Service Requests – **Noise - Residential** only | NYC Open Data | one complaint | 249,908 complaints (Jan–Aug 2026) |
 
-Large raw files are not stored in this repository because of GitHub's file size limit; see [data/large_files_not_uploaded.md](Projects/data/large_files_not_uploaded.md).
-
 ### 1.2 What each row represents and how the datasets connect
 - **One row in the combined dataset = one Airbnb listing.**
 - **Calendar → listing ID.** The calendar has about 365 rows per listing, so a direct merge would repeat each listing 365 times. We first **aggregated** it to one row per listing (weekday and weekend availability rates) and then merged on `id` = `listing_id`.
