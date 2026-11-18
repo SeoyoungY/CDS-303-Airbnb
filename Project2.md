@@ -1,11 +1,6 @@
-# Airbnb Listing Profiles in New York City
-
-**CDS 303 – Final Project 2**
+# Project 2: Data Integration, Research Question Refinement, and PCA
 
 **Team Members:** Seohyun Hong, Seoyoung Yun, Sieun Woo
-
----
-# Project 2: Data Integration, Research Question Refinement, and PCA
 
 **Notebook:** [CDS303_Final_Project2_Portable.ipynb](Projects/Project2/CDS303_Final_Project2_Portable.ipynb)
 
