@@ -145,7 +145,3 @@ We retain **6 components**, the smallest number that explains **at least 80%** o
 
 ---
 
-## Supporting Files
-- [Notebook](Projects/Project2/CDS303_Final_Project2_Portable.ipynb)
-- [Combined dataset](Projects/Project2/data/airbnb_integrated_part1.csv)
-- [PCA loadings](Projects/Project2/data/pca_loadings.csv) · [Explained variance](Projects/Project2/data/pca_explained_variance.csv) · [PCA scores](Projects/Project2/data/pca_scores.csv)
