@@ -19,7 +19,6 @@
 | MTA Subway Stations and Complexes | NY State Open Data | one station | Nov 2026 download | Comparison |
 | Airports (JFK, LGA, EWR) | OurAirports | one airport | — | Comparison |
 
-Large raw files are not stored in this repository because of GitHub's file size limit; see [large_files_not_uploaded.md](Projects/data/large_files_not_uploaded.md).
 
 ### 1.2 What each row represents and how the datasets connect
 - **One row in the combined dataset = one Airbnb listing.**
@@ -160,8 +159,3 @@ Listings with high PC1 scores have more restaurants and museums nearby and are c
 - No clustering or classification was performed in this session.
 
 ---
-
-## Supporting Files
-- [Notebook](Projects/Project2/CDS303_Final_Project2_Final_Demo06.ipynb)
-- [Combined dataset](Projects/Project2/data/airbnb_integrated_part1.csv)
-- [PCA input](Projects/Project2/data/airbnb_pca_input.csv) · [Explained variance](Projects/Project2/data/pca_explained_variance.csv) · [Loadings](Projects/Project2/data/pca_loadings.csv) · [PCA scores](Projects/Project2/data/pca_scores.csv)
