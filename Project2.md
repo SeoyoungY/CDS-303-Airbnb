@@ -3,6 +3,7 @@
 **Notebook:** [CDS303_Final_Project2_Final_Demo06.ipynb](Projects/Project2/CDS303_Final_Project2_Final_Demo06.ipynb)
 
 **Team member: Seohyun Hong, Sieun Woo, Seoyoung Yun**
+
 ---
 
 ## 1. Data Integration and Preparation
@@ -19,6 +20,7 @@
 | MTA Subway Stations and Complexes | NY State Open Data | one station | Nov 2026 download | Comparison |
 | Airports (JFK, LGA, EWR) | OurAirports | one airport | — | Comparison |
 
+Large raw files are not stored in this repository because of GitHub's file size limit; see [large_files_not_uploaded.md](Projects/data/large_files_not_uploaded.md).
 
 ### 1.2 What each row represents and how the datasets connect
 - **One row in the combined dataset = one Airbnb listing.**
@@ -59,7 +61,7 @@ The Airbnb listings are a **September 14, 2026** snapshot, but some supplementar
 
 | Variable | Meaning | Transformation |
 |---|---|---|
-| `log_price` | Nightly price | Capped at 99th percentile, log1p |
+| `log_price` | Nightly price | Capped at 99th percentile ($2,000), log1p |
 | `availability_30` | Open days in the next 30 days | — |
 | `availability_365` | Open days in the next 365 days | — |
 | `log_minimum_nights` | Minimum stay | Capped at 99th percentile, log1p |
@@ -69,11 +71,12 @@ The Airbnb listings are a **September 14, 2026** snapshot, but some supplementar
 **Excluded from PCA:**
 - `id`, `listing_id`, `host_id`: identifiers, not measurements.
 - `Latitude`, `Longitude`: used only for matching locations.
-- `room_type`, borough, `license`, `calculated_host_listings_count`: categorical or kept to explain groups in the later classification step. Encoded categorical variables were not used because one-hot (0/1) columns are not continuous measurements and rare categories can dominate a component after standardization.
-- Parks, museums, subway, airports, restaurants, 311 noise complaints, and calendar weekday/weekend rates: used for comparison only (see 1.4).
+- `room_type`, borough, `license`, `calculated_host_listings_count`: saved for the classification step, where we use them to explain the groups. Using them in PCA would make that explanation circular. Encoded categorical variables were also avoided because one-hot (0/1) columns are not continuous measurements and rare categories can dominate a component after standardization.
+- Restaurants, museums, parks, subway distance, airport distance, and 311 noise complaints mostly describe how central or busy an area is. Several are strongly related to PC1 (restaurants 0.71, museums 0.63). Including all of them would make the PCA mainly about urban density and hide differences in price, availability, and minimum nights, so they are used only to interpret the components (see 1.4).
+- Calendar weekday/weekend availability rates come from the same calendar information as `availability_365`, so they would repeat the same information.
 
 ### 1.7 Standardization
-The six variables are measured in different units (log dollars, days, counts). PCA finds directions of largest variance, so without scaling, `availability_365` (0–365 days) would dominate. Following Demo 6, we used `StandardScaler` so every variable has mean 0 and standard deviation 1. Skewed price and count variables were log-transformed first.
+The six variables are measured in different units (days, log-transformed dollars, and log-transformed counts). PCA finds directions of largest variance, so without scaling, `availability_365` (0–365 days) would dominate. Following Demo 6, we used `StandardScaler` so every variable has mean 0 and standard deviation 1. Skewed price and count variables were log-transformed first.
 
 ![Correlation between PCA variables](Projects/Project2/figures/correlation_clustermap.png)
 
@@ -82,13 +85,13 @@ The six variables are measured in different units (log dollars, days, counts). P
 ## 2. Refined Research Question and Audience
 
 **Research question.**
-> What are the main patterns of variation among actively offered NYC Airbnb listings based on price, availability, minimum-night requirements, nearby Airbnb supply, and reported neighborhood incidents, and how are these patterns related to other neighborhood conditions such as restaurants, museums, and subway access?
+> What are the main patterns of variation among NYC Airbnb listings based on price, availability, minimum-night requirements, nearby Airbnb supply, and reported neighborhood incidents?
 
-**Audience.** Current and prospective **NYC Airbnb hosts and small property managers** who operate one or a few listings.
+**Audience.** NYC hosts who manage one or a few listings and are setting or changing their nightly price, minimum-night rule, and calendar availability. Property managers who set these policies for several small listings could use the same comparison.
 
-**Relevance.** Hosts usually set price, minimum stay, and open dates by looking at a few similar-looking listings. Price alone does not show whether a listing is in a busy area with many competing listings, how open its calendar is compared with others, or whether it follows a short-stay or monthly-rental pattern.
+**Relevance.** A host who sets a price usually looks at similar listings, but price is only one of several choices. A host also decides how long guests must stay and how many dates to keep open, and the local market is different in each part of the city. Hosts need to know which of these characteristics move together and which can be set independently.
 
-**Potential use.** The PCA shows which listing characteristics vary together, and the next step (clustering) will group listings with similar profiles. A host can then compare their price, minimum-night rule, and availability with listings in the **same profile**, for example when deciding whether to offer short stays or 30+ night stays. These results describe patterns; they do not predict bookings, revenue, or profit.
+**Potential use.** The PCA shows that price, nearby Airbnb supply, and reported incidents form one main dimension of variation, while calendar availability forms a separate one. A host could place their own listing along these dimensions and compare it with listings in similar locations. In the next project stage, clustering can turn these dimensions into groups of comparable listings. These results describe patterns in listings. They do not predict bookings, revenue, or profitability.
 
 ---
 
@@ -121,10 +124,10 @@ We retain **4 components**, the smallest number that explains **at least 80%** o
 
 ![Loadings of the retained components](Projects/Project2/figures/pca_loadings_heatmap.png)
 
-- **PC1 (35.3%) – Price and local activity.** High: many nearby Airbnb listings (0.58), more reported incidents (0.56), and higher price (0.46); low: longer minimum stays (−0.34). Listings in busy areas with many competitors tend to be more expensive and allow shorter stays.
-- **PC2 (23.3%) – Listing availability.** High: open days in the next 30 days (0.68) and 365 days (0.61), together with higher price (0.37).
+- **PC1 (35.3%) – Price and local activity.** High: many nearby Airbnb listings (0.58), more reported incidents (0.56), and higher price (0.46); low: longer minimum stays (−0.34). This is the largest source of variation, and it follows how central and active the area is.
+- **PC2 (23.3%) – Listing availability.** High: open days in the next 30 days (0.68) and 365 days (0.61), together with higher price (0.37). A listing's calendar openness is not simply a result of its price or location.
 - **PC3 (19.4%) – Minimum stay requirements.** Mainly longer minimum stays (0.69), with lower price (−0.34).
-- **PC4 (10.6%) – Short-term vs. annual availability.** `availability_365` (0.70) and `availability_30` (−0.68) move in opposite directions: listings open for much of the year but not in the next month, versus listings open now but not for the whole year.
+- **PC4 (10.6%) – Short-term vs. annual availability.** `availability_365` (0.70) and `availability_30` (−0.68) move in opposite directions.
 
 **Comparison with variables not used in PCA** (correlation with PC scores):
 
@@ -139,16 +142,19 @@ We retain **4 components**, the smallest number that explains **at least 80%** o
 | Calendar weekday availability rate | −0.16 | 0.73 |
 | Calendar weekend availability rate | −0.16 | 0.72 |
 
-Listings with high PC1 scores have more restaurants and museums nearby and are closer to the subway, which supports reading PC1 as a **busy, central-neighborhood** dimension. The calendar availability rates are strongly related to PC2, which supports reading PC2 as **availability**.
+Listings with high PC1 scores have more restaurants and museums nearby and are closer to the subway, which supports reading PC1 as a **central, high-activity area** dimension. PC2 scores are strongly related to the calendar availability rates, but these rates summarize the same calendar information as `availability_365`, so this is a consistency check, not independent evidence.
 
 ### 3.3 Biplot and discussion
 ![PCA biplot](Projects/Project2/figures/pca_biplot.png)
 
-- Nearby Airbnb listings and NYPD reports point to the right (PC1); the two availability arrows point up (PC2); price points up and to the right; minimum nights points to the left and slightly down.
-- **[그림 확인 후 수정]** The points form one continuous cloud without clearly separated groups.
-- **PCA identifies directions of variation, not clusters.** Dense or sparse areas in the plot are not confirmed groups. The biplot shows only PC1 and PC2 (58.6% of the variance); all 4 retained components will be used for clustering.
+- **One continuous cloud, no separate groups.** The listings form a single dense cloud around the center. We do not see clearly separated groups, so we do not interpret this plot as showing clusters.
+- **PC1 – price and local activity.** The arrows for nearby Airbnb listings, NYPD reported incidents, and price point to the right, and minimum nights points to the left. Listings on the right side tend to have higher prices, more nearby Airbnb listings, more reported incidents, and shorter minimum stays.
+- **PC2 – availability.** Both availability arrows point upward and are almost perpendicular to the PC1 arrows, so how open a listing's calendar is varies largely independently of price and local activity.
+- **Overlapping arrows.** The "Nearby Airbnb" and "NYPD reports" arrows almost overlap, so these two variables carry similar information. Reported incidents likely reflect how busy an area is, not only crime.
+- **Price lies between the two axes.** The price arrow points up and to the right, so price is related to both local activity (PC1) and availability (PC2).
+- **Limitation.** PC1 and PC2 together explain 58.6% of the variance, so the two-dimensional plot does not show the full structure. All 4 retained components will be used for clustering.
 
-**Relation to the research question and audience.** NYC listings differ mainly in (1) price together with how busy and competitive the surrounding area is, (2) how open the calendar is, and (3) how long guests must stay. For hosts, this means a fair comparison should consider location activity, availability, and minimum-stay rules together with price. In the next session, the retained components will be used to group listings, and room type, borough, host listing count, and license status will help explain the groups.
+**Relation to the research question and audience.** NYC listings differ mainly in (1) price together with how busy and competitive the surrounding area is, (2) how open the calendar is, and (3) how long guests must stay. For hosts who decide on a nightly price, a minimum stay, and how many dates to leave open, the main takeaway is that price and nearby Airbnb supply move together, while calendar availability is a largely separate choice. A host can therefore compare these decisions separately. In the next project stage, the retained components will be used to group listings, and room type, borough, host listing count, and license status will help explain the groups.
 
 ### 3.4 Limitations
 - 35.1% of listings without a price were excluded, so results describe actively offered listings only.
@@ -156,6 +162,4 @@ Listings with high PC1 scores have more restaurants and museums nearby and are c
 - The 311 data include only residential noise complaints, and a complaint is a report rather than a measured noise level. NYPD counts are reported incidents, not direct safety scores.
 - Parks, museums, and subway data were downloaded in November 2026, so they may not show exact September conditions; they were used only for comparison.
 - Airbnb coordinates are slightly shifted for privacy, so nearby counts are approximate.
-- No clustering or classification was performed in this session.
-
----
+- PCA identifies directions of variation, not confirmed clusters. No clustering or classification was performed in this session.
