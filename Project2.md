@@ -20,7 +20,6 @@
 | MTA Subway Stations and Complexes | NY State Open Data | one station | Nov 2026 download | Comparison |
 | Airports (JFK, LGA, EWR) | OurAirports | one airport | — | Comparison |
 
-Large raw files are not stored in this repository because of GitHub's file size limit; see [large_files_not_uploaded.md](Projects/data/large_files_not_uploaded.md).
 
 ### 1.2 What each row represents and how the datasets connect
 - **One row in the combined dataset = one Airbnb listing.**
